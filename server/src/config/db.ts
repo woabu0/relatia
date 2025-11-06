@@ -1,34 +1,25 @@
-import { MongoClient, ServerApiVersion } from "mongodb";
-import dotenv from "dotenv";
+import mongoose from 'mongoose';
 
-dotenv.config();
-
-// Encode credentials to handle special characters
-const username = encodeURIComponent(process.env.DB_USERNAME as string);
-const password = encodeURIComponent(process.env.DB_PASSWORD as string);
-
-const uri = `mongodb+srv://${username}:${password}@cluster0.vgvhsan.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
-
-// Create MongoClient
-const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  },
-  tls: true, // enforce TLS
-});
-
-// Connect to MongoDB
-export async function connectDB(): Promise<void> {
+const connectDB = async (): Promise<void> => {
   try {
-    await client.connect(); // no need for isConnected()
-    await client.db("admin").command({ ping: 1 });
-    console.log("Connected to MongoDB Atlas!");
+    // Double check the URI
+    const mongoUri = process.env.MONGODB_URI;
+    if (!mongoUri) {
+      throw new Error('MONGODB_URI is not defined');
+    }
+
+    console.log('Attempting to connect to MongoDB...');
+    
+    const conn = await mongoose.connect(mongoUri, {
+      serverSelectionTimeoutMS: 30000,
+      socketTimeoutMS: 45000,
+    });
+
+    console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
-    console.error("MongoDB connection failed:", error);
+    console.error('MongoDB connection error:', error);
     process.exit(1);
   }
-}
+};
 
-export default client;
+export default connectDB;

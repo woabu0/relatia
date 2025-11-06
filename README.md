@@ -9,6 +9,7 @@ Welcome to the **Relatia** project! This README provides an overview of the proj
 - [Features](#features)
 - [Installation](#installation)
 - [Usage](#usage)
+- [Structure](#structure)
 - [Contributors](#contributors)
 - [Contributing](#contributing)
 - [License](#license)
@@ -66,6 +67,38 @@ Welcome to the **Relatia** project! This README provides an overview of the proj
    ```
    http://localhost:5173
    ```
+
+## Structure
+
+```
+client/
+├── src/
+│   ├── app/
+│   │   ├── layout.tsx
+│   │   ├── page.tsx            // Home
+│   │   ├── login/
+│   │   │   └── page.tsx        // Login Page
+│   │   ├── register/
+│   │   │   └── page.tsx        // Register Page
+│   │   ├── dashboard/
+│   │   │   ├── page.tsx        // Generic Dashboard
+│   │   │   ├── admin/page.tsx  // Admin dashboard
+│   │   │   ├── manager/page.tsx// Manager dashboard
+│   │   │   └── client/page.tsx // Client dashboard
+│   ├── components/
+│   │   ├── AuthForm.tsx
+│   │   ├── Navbar.tsx
+│   │   └── ProtectedRoute.tsx
+│   ├── utils/
+│   │   ├── api.ts              // Axios setup
+│   │   └── auth.ts             // Auth helpers
+│   └── styles/
+│       └── globals.css
+├── package.json
+├── tsconfig.json
+├── next.config.js
+└── .env.local
+```
 
 ## Contributors
 
