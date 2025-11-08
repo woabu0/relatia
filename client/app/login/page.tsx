@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import api from "@/utils/api";
+import { apiService } from "../../lib/api";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react";
 
@@ -44,34 +44,34 @@ export default function LoginPage() {
     setErrors({});
 
     try {
-      const res = await api.post("/login", form);
-      localStorage.setItem("token", res.data.token);
+      const response = await apiService.login(form.email, form.password);
       
-      // Show success message
-      alert("Login successful! Welcome back.");
-      router.push("/dashboard");
+      localStorage.setItem("token", response.token);
+      localStorage.setItem("userData", JSON.stringify(response.user));
+      
+      console.log("✅ Login successful, redirecting...");
+      
+      // Force redirect to dashboard - this will trigger the auth check
+      window.location.href = "/dashboard";
+      
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || "Login failed";
+      const errorMessage = error.message || "Login failed";
       setErrors({ submit: errorMessage });
-    } finally {
       setLoading(false);
     }
   };
 
   const handleChange = (field: string, value: string) => {
     setForm({ ...form, [field]: value });
-    // Clear field error when user starts typing
     if (errors[field]) {
       setErrors({ ...errors, [field]: "" });
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4 text-black">
       <div className="max-w-md w-full">
-        {/* Card Container */}
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 text-white">
             <h1 className="text-2xl font-bold text-center">Welcome Back</h1>
             <p className="text-blue-100 text-center mt-2">
@@ -79,7 +79,6 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
             {/* Email Field */}
             <div>
@@ -142,17 +141,6 @@ export default function LoginPage() {
               )}
             </div>
 
-            {/* Forgot Password Link */}
-            <div className="flex justify-end">
-              <button
-                type="button"
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
-                onClick={() => router.push("/forgot-password")}
-              >
-                Forgot your password?
-              </button>
-            </div>
-
             {/* Submit Error */}
             {errors.submit && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-3">
@@ -182,47 +170,20 @@ export default function LoginPage() {
               )}
             </button>
 
-            {/* Divider */}
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">New to our platform?</span>
-              </div>
-            </div>
-
             {/* Register Link */}
-            <button
-              type="button"
-              onClick={() => router.push("/register")}
-              className="w-full border border-gray-300 text-gray-700 py-3 px-4 rounded-lg font-semibold hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 shadow-sm"
-            >
-              Create New Account
-            </button>
+            <div className="text-center pt-4">
+              <p className="text-gray-600">
+                Don't have an account?{" "}
+                <button
+                  type="button"
+                  onClick={() => router.push("/register")}
+                  className="text-blue-600 hover:text-blue-700 font-semibold transition-colors"
+                >
+                  Sign up
+                </button>
+              </p>
+            </div>
           </form>
-        </div>
-
-        {/* Features List */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-          <div className="bg-white rounded-lg p-4 shadow-sm">
-            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
-              <Lock className="h-4 w-4 text-blue-600" />
-            </div>
-            <p className="text-sm text-gray-600">Secure Login</p>
-          </div>
-          <div className="bg-white rounded-lg p-4 shadow-sm">
-            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
-              <Mail className="h-4 w-4 text-green-600" />
-            </div>
-            <p className="text-sm text-gray-600">Easy Access</p>
-          </div>
-          <div className="bg-white rounded-lg p-4 shadow-sm">
-            <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
-              <ArrowRight className="h-4 w-4 text-purple-600" />
-            </div>
-            <p className="text-sm text-gray-600">Quick Setup</p>
-          </div>
         </div>
       </div>
     </div>

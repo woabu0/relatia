@@ -1,9 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import api from "@/utils/api";
+import { apiService } from "../../lib/api";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, User, Mail, Lock, Briefcase } from "lucide-react";
+import { Eye, EyeOff, User, Mail, Lock, Building, Phone } from "lucide-react";
+
+interface RegisterForm {
+  username: string;
+  email: string;
+  password: string;
+  companyName: string;
+  phone: string;
+}
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -11,11 +19,12 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<RegisterForm>({
     username: "",
     email: "",
     password: "",
-    role: "client",
+    companyName: "",
+    phone: ""
   });
 
   const validateForm = () => {
@@ -39,6 +48,14 @@ export default function RegisterPage() {
       newErrors.password = "Password must be at least 6 characters";
     }
 
+    if (!form.companyName.trim()) {
+      newErrors.companyName = "Company name is required";
+    }
+
+    if (!form.phone.trim()) {
+      newErrors.phone = "Phone number is required";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -54,39 +71,35 @@ export default function RegisterPage() {
     setErrors({});
 
     try {
-      await api.post("/register", form);
+      await apiService.register(form);
       alert("Registration successful! Please login to continue.");
       router.push("/login");
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || "Registration failed";
+      const errorMessage = error.message || "Registration failed";
       setErrors({ submit: errorMessage });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleChange = (field: string, value: string) => {
+  const handleChange = (field: keyof RegisterForm, value: string) => {
     setForm({ ...form, [field]: value });
-    // Clear field error when user starts typing
     if (errors[field]) {
       setErrors({ ...errors, [field]: "" });
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4 text-black">
       <div className="max-w-md w-full">
-        {/* Card Container */}
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 text-white">
             <h1 className="text-2xl font-bold text-center">Create Account</h1>
             <p className="text-blue-100 text-center mt-2">
-              Join us today and get started
+              Join our CRM platform
             </p>
           </div>
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
             {/* Username Field */}
             <div>
@@ -138,6 +151,56 @@ export default function RegisterPage() {
               )}
             </div>
 
+            {/* Company Name Field */}
+            <div>
+              <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1">
+                Company Name *
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Building className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="companyName"
+                  type="text"
+                  placeholder="Enter your company name"
+                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+                    errors.companyName ? "border-red-500" : "border-gray-300"
+                  }`}
+                  value={form.companyName}
+                  onChange={(e) => handleChange("companyName", e.target.value)}
+                />
+              </div>
+              {errors.companyName && (
+                <p className="mt-1 text-sm text-red-600">{errors.companyName}</p>
+              )}
+            </div>
+
+            {/* Phone Field */}
+            <div>
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+                Phone Number *
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Phone className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="phone"
+                  type="tel"
+                  placeholder="Enter your phone number"
+                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+                    errors.phone ? "border-red-500" : "border-gray-300"
+                  }`}
+                  value={form.phone}
+                  onChange={(e) => handleChange("phone", e.target.value)}
+                />
+              </div>
+              {errors.phone && (
+                <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
+              )}
+            </div>
+
             {/* Password Field */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
@@ -172,33 +235,9 @@ export default function RegisterPage() {
               {errors.password && (
                 <p className="mt-1 text-sm text-red-600">{errors.password}</p>
               )}
-            </div>
-
-            {/* Role Field */}
-            <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
-                Role
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Briefcase className="h-5 w-5 text-gray-400" />
-                </div>
-                <select
-                  id="role"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
-                  value={form.role}
-                  onChange={(e) => handleChange("role", e.target.value)}
-                >
-                  <option value="client">Client</option>
-                  <option value="manager">Manager</option>
-                  <option value="admin">Admin</option>
-                </select>
-                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                First user to register becomes Admin, others become regular Users
+              </p>
             </div>
 
             {/* Submit Error */}
@@ -241,28 +280,6 @@ export default function RegisterPage() {
               </p>
             </div>
           </form>
-        </div>
-
-        {/* Features List */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-          <div className="bg-white rounded-lg p-4 shadow-sm">
-            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
-              <User className="h-4 w-4 text-blue-600" />
-            </div>
-            <p className="text-sm text-gray-600">Easy to use</p>
-          </div>
-          <div className="bg-white rounded-lg p-4 shadow-sm">
-            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
-              <Lock className="h-4 w-4 text-green-600" />
-            </div>
-            <p className="text-sm text-gray-600">Secure</p>
-          </div>
-          <div className="bg-white rounded-lg p-4 shadow-sm">
-            <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
-              <Briefcase className="h-4 w-4 text-purple-600" />
-            </div>
-            <p className="text-sm text-gray-600">Flexible roles</p>
-          </div>
         </div>
       </div>
     </div>
