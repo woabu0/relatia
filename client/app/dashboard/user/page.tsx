@@ -3,11 +3,13 @@
 import { useAuth } from '../../../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Lead, Task } from '../../../types';
+import { Lead, Task, Ticket } from '../../../types';
 import AddLeadForm from '../../../components/ui/AddLeadForm';
 import AddTaskForm from '../../../components/ui/AddTaskForm';
 import EditLeadForm from '../../../components/ui/EditLeadForm';
 import EditTaskForm from '../../../components/ui/EditTaskForm';
+import CreateTicketForm from '../../../components/ui/CreateTicketForm';
+import TicketsList from '../../../components/ui/TicketList';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -16,7 +18,8 @@ export default function UserDashboard() {
   const router = useRouter();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [activeTab, setActiveTab] = useState<'leads' | 'tasks'>('leads');
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [activeTab, setActiveTab] = useState<'leads' | 'tasks' | 'tickets'>('leads');
   const [loading, setLoading] = useState(true);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
@@ -32,7 +35,7 @@ export default function UserDashboard() {
   const fetchInitialData = async () => {
     try {
       setLoading(true);
-      await Promise.all([fetchLeads(), fetchTasks()]);
+      await Promise.all([fetchLeads(), fetchTasks(), fetchTickets()]);
     } catch (error) {
       console.error('Error fetching initial data:', error);
     } finally {
@@ -82,12 +85,37 @@ export default function UserDashboard() {
     }
   };
 
+  const fetchTickets = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/tickets`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setTickets(data.tickets || []);
+      } else {
+        console.error('Failed to fetch tickets');
+        setTickets([]);
+      }
+    } catch (error) {
+      console.error('Failed to fetch tickets:', error);
+      setTickets([]);
+    }
+  };
+
   const handleLeadAdded = (newLead: Lead) => {
     setLeads(prev => [newLead, ...prev]);
   };
 
   const handleTaskAdded = (newTask: Task) => {
     setTasks(prev => [newTask, ...prev]);
+  };
+
+  const handleTicketCreated = (newTicket: Ticket) => {
+    setTickets(prev => [newTicket, ...prev]);
   };
 
   const handleLeadUpdated = (updatedLead: Lead) => {
@@ -157,7 +185,6 @@ export default function UserDashboard() {
   };
 
   const formatPhoneNumber = (phone: string) => {
-    // Remove all non-digit characters
     return phone.replace(/\D/g, '');
   };
 
@@ -231,6 +258,16 @@ export default function UserDashboard() {
             }`}
           >
             Tasks ({tasks.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('tickets')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'tickets'
+                ? 'border-purple-500 text-purple-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Tickets ({tickets.length})
           </button>
         </nav>
       </div>
@@ -422,6 +459,13 @@ export default function UserDashboard() {
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {activeTab === 'tickets' && (
+        <div className="space-y-6">
+          <CreateTicketForm onTicketCreated={handleTicketCreated} />
+          <TicketsList userRole={user.role} />
         </div>
       )}
     </div>

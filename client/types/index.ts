@@ -37,3 +37,42 @@ export interface Lead {
     createdAt: string;
     updatedAt: string;
   }
+
+  // Add these to your existing types
+
+export interface Ticket {
+  _id: string;
+  title: string;
+  description: string;
+  status: "open" | "in-progress" | "resolved" | "closed";
+  priority: "low" | "medium" | "high" | "urgent";
+  category: "technical" | "billing" | "feature-request" | "bug" | "other";
+  createdBy: {
+    _id: string;
+    username: string;
+    email: string;
+  };
+  assignedTo?: {
+    _id: string;
+    username: string;
+    email: string;
+  };
+  comments: Comment[];
+  attachments?: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Comment {
+  text: string;
+  createdBy: {
+    _id: string;
+    username: string;
+    email: string;
+  };
+  createdAt: string;
+}
+
+export interface TicketsResponse {
+  tickets: Ticket[];
+}
