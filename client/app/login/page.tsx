@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { apiService } from "../../lib/api";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, ArrowRight } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -69,122 +69,126 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4 text-black">
-      <div className="max-w-md w-full">
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 text-white">
-            <h1 className="text-2xl font-bold text-center">Welcome Back</h1>
-            <p className="text-blue-100 text-center mt-2">
-              Sign in to your account to continue
-            </p>
+    <div className="min-h-screen flex items-center justify-center px-4 bg-slate-900">
+      <div className="w-full max-w-sm">
+        <h1 className="text-center text-3xl font-semibold text-white">
+          Sign in to Relatia
+        </h1>
+        <p className="mt-2 text-center text-sm text-slate-400">
+          Welcome back. Let's keep momentum with your customers.
+        </p>
+
+        <form onSubmit={handleSubmit} className="mt-10 space-y-6">
+          <div className="space-y-2">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-slate-300"
+            >
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              placeholder="you@company.com"
+                    className={`w-full rounded-xl border bg-slate-800 px-4 py-3 text-white placeholder:text-slate-500 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      errors.email ? "border-red-500 focus:ring-red-500" : "border-slate-600"
+                    }`}
+              value={form.email}
+              onChange={(e) => handleChange("email", e.target.value)}
+            />
+            {errors.email && (
+              <p className="text-sm text-red-400">{errors.email}</p>
+            )}
           </div>
 
-          <form onSubmit={handleSubmit} className="p-6 space-y-4">
-            {/* Email Field */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email Address
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="email"
-                  type="email"
-                  placeholder="Enter your email"
-                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                    errors.email ? "border-red-500" : "border-gray-300"
-                  }`}
-                  value={form.email}
-                  onChange={(e) => handleChange("email", e.target.value)}
-                />
-              </div>
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-              )}
-            </div>
-
-            {/* Password Field */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                Password
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
-                  className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                    errors.password ? "border-red-500" : "border-gray-300"
-                  }`}
-                  value={form.password}
-                  onChange={(e) => handleChange("password", e.target.value)}
-                />
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                  ) : (
-                    <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                  )}
-                </button>
-              </div>
-              {errors.password && (
-                <p className="mt-1 text-sm text-red-600">{errors.password}</p>
-              )}
-            </div>
-
-            {/* Submit Error */}
-            {errors.submit && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                <p className="text-sm text-red-600 text-center">{errors.submit}</p>
-              </div>
-            )}
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-3 px-4 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-800 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md flex items-center justify-center gap-2"
+          <div className="space-y-2">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-slate-300"
             >
-              {loading ? (
-                <>
-                  <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                  Signing In...
-                </>
-              ) : (
-                <>
-                  Sign In
-                  <ArrowRight className="h-5 w-5" />
-                </>
-              )}
-            </button>
-
-            {/* Register Link */}
-            <div className="text-center pt-4">
-              <p className="text-gray-600">
-                Don't have an account?{" "}
-                <button
-                  type="button"
-                  onClick={() => router.push("/register")}
-                  className="text-blue-600 hover:text-blue-700 font-semibold transition-colors"
-                >
-                  Sign up
-                </button>
-              </p>
+              Password
+            </label>
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter your password"
+                className={`w-full rounded-xl border bg-slate-800 px-4 py-3 pr-12 text-white placeholder:text-slate-500 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  errors.password ? "border-red-500 focus:ring-red-500" : "border-slate-600"
+                }`}
+                value={form.password}
+                onChange={(e) => handleChange("password", e.target.value)}
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-3 flex items-center text-slate-500 transition hover:text-slate-300"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
+              </button>
             </div>
-          </form>
-        </div>
+            {errors.password && (
+              <p className="text-sm text-red-400">{errors.password}</p>
+            )}
+          </div>
+
+          {errors.submit && (
+            <div className="rounded-xl border border-red-500/50 bg-red-500/20 px-4 py-3 text-center text-sm text-red-300">
+              {errors.submit}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-base font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loading ? (
+              <>
+                <svg
+                  className="h-5 w-5 animate-spin text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                Signing in…
+              </>
+            ) : (
+              <>
+                Sign in
+                <ArrowRight className="h-5 w-5" />
+              </>
+            )}
+          </button>
+
+          <p className="text-center text-sm text-slate-500">
+            Don&apos;t have an account?{" "}
+            <button
+              type="button"
+              onClick={() => router.push("/register")}
+              className="font-semibold text-blue-400 transition hover:text-blue-300"
+            >
+              Create one
+            </button>
+          </p>
+        </form>
       </div>
     </div>
   );

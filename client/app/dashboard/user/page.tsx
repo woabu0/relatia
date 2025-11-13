@@ -10,8 +10,7 @@ import EditLeadForm from '../../../components/ui/EditLeadForm';
 import EditTaskForm from '../../../components/ui/EditTaskForm';
 import CreateTicketForm from '../../../components/ui/CreateTicketForm';
 import TicketsList from '../../../components/ui/TicketList';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+import { apiService } from '../../../lib/api';
 
 export default function UserDashboard() {
   const { user } = useAuth();
@@ -45,19 +44,8 @@ export default function UserDashboard() {
 
   const fetchLeads = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/leads`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setLeads(data.leads || []);
-      } else {
-        console.error('Failed to fetch leads');
-        setLeads([]);
-      }
+      const data = await apiService.getLeads();
+      setLeads(data?.leads ?? []);
     } catch (error) {
       console.error('Failed to fetch leads:', error);
       setLeads([]);
@@ -66,19 +54,8 @@ export default function UserDashboard() {
 
   const fetchTasks = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/tasks`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setTasks(data.tasks || []);
-      } else {
-        console.error('Failed to fetch tasks');
-        setTasks([]);
-      }
+      const data = await apiService.getTasks();
+      setTasks(data?.tasks ?? []);
     } catch (error) {
       console.error('Failed to fetch tasks:', error);
       setTasks([]);
@@ -87,19 +64,8 @@ export default function UserDashboard() {
 
   const fetchTickets = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/tickets`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setTickets(data.tickets || []);
-      } else {
-        console.error('Failed to fetch tickets');
-        setTickets([]);
-      }
+      const data = await apiService.getTickets();
+      setTickets(data?.tickets ?? []);
     } catch (error) {
       console.error('Failed to fetch tickets:', error);
       setTickets([]);
@@ -138,23 +104,11 @@ export default function UserDashboard() {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/leads/${leadId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (response.ok) {
-        setLeads(prev => prev.filter(lead => lead._id !== leadId));
-      } else {
-        const errorData = await response.json();
-        alert(errorData.message || 'Failed to delete lead');
-      }
+      await apiService.deleteLead(leadId);
+      setLeads(prev => prev.filter(lead => lead._id !== leadId));
     } catch (error) {
       console.error('Failed to delete lead:', error);
-      alert('Failed to delete lead');
+      alert(error instanceof Error ? error.message : 'Failed to delete lead');
     }
   };
 
@@ -164,23 +118,11 @@ export default function UserDashboard() {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/tasks/${taskId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (response.ok) {
-        setTasks(prev => prev.filter(task => task._id !== taskId));
-      } else {
-        const errorData = await response.json();
-        alert(errorData.message || 'Failed to delete task');
-      }
+      await apiService.deleteTask(taskId);
+      setTasks(prev => prev.filter(task => task._id !== taskId));
     } catch (error) {
       console.error('Failed to delete task:', error);
-      alert('Failed to delete task');
+      alert(error instanceof Error ? error.message : 'Failed to delete task');
     }
   };
 
@@ -209,7 +151,7 @@ export default function UserDashboard() {
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          <p className="text-gray-600">Loading your data...</p>
+          <p className="text-slate-600">Loading your data...</p>
         </div>
       </div>
     );
@@ -237,14 +179,14 @@ export default function UserDashboard() {
       )}
 
       {/* Tab Navigation */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-slate-200">
         <nav className="-mb-px flex space-x-8">
           <button
             onClick={() => setActiveTab('leads')}
             className={`py-2 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'leads'
                 ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
             }`}
           >
             Leads ({leads.length})
@@ -254,7 +196,7 @@ export default function UserDashboard() {
             className={`py-2 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'tasks'
                 ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
             }`}
           >
             Tasks ({tasks.length})
@@ -263,8 +205,8 @@ export default function UserDashboard() {
             onClick={() => setActiveTab('tickets')}
             className={`py-2 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'tickets'
-                ? 'border-purple-500 text-purple-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
             }`}
           >
             Tickets ({tickets.length})
@@ -278,12 +220,12 @@ export default function UserDashboard() {
           <AddLeadForm onLeadAdded={handleLeadAdded} />
           
           {/* Leads List */}
-          <div className="bg-white rounded-lg shadow-md">
-            <div className="p-4 border-b flex justify-between items-center">
-              <h3 className="font-semibold">My Leads</h3>
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200">
+            <div className="p-4 border-b border-slate-200 flex justify-between items-center">
+              <h3 className="font-semibold text-slate-900">My Leads</h3>
               <button
                 onClick={fetchLeads}
-                className="text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-md transition-colors"
+                className="text-sm bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition-colors text-slate-700"
               >
                 Refresh
               </button>
@@ -291,20 +233,20 @@ export default function UserDashboard() {
             <div className="p-4">
               {leads.length === 0 ? (
                 <div className="text-center py-8">
-                  <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="mx-auto h-12 w-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
-                  <p className="mt-2 text-gray-500">No leads yet. Add your first lead above!</p>
+                  <p className="mt-2 text-slate-500">No leads yet. Add your first lead above!</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {leads.map(lead => (
-                    <div key={lead._id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                    <div key={lead._id} className="border border-slate-200 rounded-lg p-4 hover:bg-slate-50 transition-colors">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
-                          <h4 className="font-medium text-lg text-gray-900">{lead.name}</h4>
+                          <h4 className="font-medium text-lg text-slate-900">{lead.name}</h4>
                           <div className="flex items-center space-x-4 mt-1">
-                            <span className="text-gray-600">{lead.email}</span>
+                            <span className="text-slate-600">{lead.email}</span>
                             <span>•</span>
                             <a 
                               href={getWhatsAppUrl(lead.phone)}
@@ -318,14 +260,14 @@ export default function UserDashboard() {
                               <span>{lead.phone}</span>
                             </a>
                           </div>
-                          {lead.company && <p className="text-gray-600 mt-1">{lead.company}</p>}
-                          {lead.notes && <p className="text-gray-500 text-sm mt-1">{lead.notes}</p>}
+                          {lead.company && <p className="text-slate-600 mt-1">{lead.company}</p>}
+                          {lead.notes && <p className="text-slate-500 text-sm mt-1">{lead.notes}</p>}
                           <div className="flex items-center mt-2 space-x-2">
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-slate-500">
                               Added: {new Date(lead.createdAt).toLocaleDateString()}
                             </span>
-                            <span className="text-xs text-gray-500">•</span>
-                            <span className="text-xs text-gray-500 capitalize">
+                            <span className="text-xs text-slate-500">•</span>
+                            <span className="text-xs text-slate-500 capitalize">
                               Source: {lead.source}
                             </span>
                           </div>
@@ -376,12 +318,12 @@ export default function UserDashboard() {
           />
           
           {/* Tasks List */}
-          <div className="bg-white rounded-lg shadow-md">
-            <div className="p-4 border-b flex justify-between items-center">
-              <h3 className="font-semibold">My Tasks</h3>
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200">
+            <div className="p-4 border-b border-slate-200 flex justify-between items-center">
+              <h3 className="font-semibold text-slate-900">My Tasks</h3>
               <button
                 onClick={fetchTasks}
-                className="text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-md transition-colors"
+                className="text-sm bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition-colors text-slate-700"
               >
                 Refresh
               </button>
@@ -389,20 +331,20 @@ export default function UserDashboard() {
             <div className="p-4">
               {tasks.length === 0 ? (
                 <div className="text-center py-8">
-                  <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="mx-auto h-12 w-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                   </svg>
-                  <p className="mt-2 text-gray-500">No tasks yet. Add your first task above!</p>
+                  <p className="mt-2 text-slate-500">No tasks yet. Add your first task above!</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {tasks.map(task => (
-                    <div key={task._id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                    <div key={task._id} className="border border-slate-200 rounded-lg p-4 hover:bg-slate-50 transition-colors">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
-                          <h4 className="font-medium text-lg text-gray-900">{task.title}</h4>
-                          {task.description && <p className="text-gray-600 mt-1">{task.description}</p>}
-                          <div className="flex items-center mt-2 space-x-4 text-sm text-gray-500">
+                          <h4 className="font-medium text-lg text-slate-900">{task.title}</h4>
+                          {task.description && <p className="text-slate-600 mt-1">{task.description}</p>}
+                          <div className="flex items-center mt-2 space-x-4 text-sm text-slate-500">
                             <span>
                               Due: {new Date(task.dueDate).toLocaleDateString()}
                             </span>
@@ -426,7 +368,7 @@ export default function UserDashboard() {
                         </div>
                         <div className="flex items-center space-x-2 ml-4">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            task.status === 'pending' ? 'bg-gray-100 text-gray-800' :
+                            task.status === 'pending' ? 'bg-slate-100 text-slate-800' :
                             task.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
                             task.status === 'completed' ? 'bg-green-100 text-green-800' :
                             'bg-red-100 text-red-800'

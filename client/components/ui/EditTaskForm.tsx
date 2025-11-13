@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Task, Lead } from '../../types';
+import { apiService } from '../../lib/api';
 
 interface EditTaskFormProps {
   task: Task;
@@ -9,8 +10,6 @@ interface EditTaskFormProps {
   onCancel: () => void;
   leads: Lead[];
 }
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 export default function EditTaskForm({ task, onTaskUpdated, onCancel, leads }: EditTaskFormProps) {
   const [formData, setFormData] = useState({
@@ -30,7 +29,6 @@ export default function EditTaskForm({ task, onTaskUpdated, onCancel, leads }: E
     setError('');
     
     try {
-      const token = localStorage.getItem('token');
       const payload = {
         ...formData,
         dueDate: new Date(formData.dueDate).toISOString(),
@@ -40,25 +38,18 @@ export default function EditTaskForm({ task, onTaskUpdated, onCancel, leads }: E
         } : undefined
       };
 
-      const response = await fetch(`${API_URL}/tasks/${task._id}`, {
-        method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(payload)
-      });
-      
-      if (response.ok) {
-        const result = await response.json();
-        onTaskUpdated(result.task);
-      } else {
-        const errorData = await response.json();
-        setError(errorData.message || 'Failed to update task');
+      const result = await apiService.updateTask(task._id, payload);
+      if (!result?.task) {
+        throw new Error('Task was updated but response was missing data.');
       }
+      onTaskUpdated(result.task);
     } catch (error: unknown) {
       console.error('Failed to update task:', error);
-      setError(error instanceof Error ? error.message : 'Failed to update task');
+      setError(
+        error instanceof Error
+          ? error.message
+          : 'Failed to update task. Please try again.'
+      );
     } finally {
       setLoading(false);
     }

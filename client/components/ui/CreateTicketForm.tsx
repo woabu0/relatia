@@ -2,12 +2,11 @@
 
 import { useState } from 'react';
 import { Ticket } from '../../types';
+import { apiService, API_BASE_URL } from '../../lib/api';
 
 interface CreateTicketFormProps {
   onTicketCreated: (ticket: Ticket) => void;
 }
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 export default function CreateTicketForm({ onTicketCreated }: CreateTicketFormProps) {
   const [formData, setFormData] = useState({
@@ -25,38 +24,24 @@ export default function CreateTicketForm({ onTicketCreated }: CreateTicketFormPr
     setError('');
     
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError('No authentication token found. Please log in again.');
-        setLoading(false);
-        return;
+      const result = await apiService.createTicket(formData);
+      if (!result?.ticket) {
+        throw new Error('Ticket was created but response was missing data.');
       }
-
-      const response = await fetch(`${API_URL}/tickets`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(formData)
+      onTicketCreated(result.ticket);
+      setFormData({ 
+        title: '', 
+        description: '', 
+        priority: 'medium',
+        category: 'technical'
       });
-      
-      if (response.ok) {
-        const result = await response.json();
-        onTicketCreated(result.ticket);
-        setFormData({ 
-          title: '', 
-          description: '', 
-          priority: 'medium',
-          category: 'technical'
-        });
-      } else {
-        const errorData = await response.json();
-        setError(errorData.message || 'Failed to create ticket');
-      }
     } catch (error: unknown) {
       console.error('Failed to create ticket:', error);
-      setError(error instanceof Error ? error.message : 'Cannot connect to server.');
+      setError(
+        error instanceof Error
+          ? error.message
+          : `Cannot connect to server. Please make sure the backend is running at ${API_BASE_URL}.`
+      );
     } finally {
       setLoading(false);
     }

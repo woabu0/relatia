@@ -2,12 +2,11 @@
 
 import { useState } from 'react';
 import { Lead } from '../../types';
+import { apiService, API_BASE_URL } from '../../lib/api';
 
 interface AddLeadFormProps {
   onLeadAdded: (lead: Lead) => void;
 }
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 export default function AddLeadForm({ onLeadAdded }: AddLeadFormProps) {
   const [formData, setFormData] = useState({
@@ -27,40 +26,26 @@ export default function AddLeadForm({ onLeadAdded }: AddLeadFormProps) {
     setError('');
     
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError('No authentication token found. Please log in again.');
-        setLoading(false);
-        return;
+      const result = await apiService.createLead(formData);
+      if (!result?.lead) {
+        throw new Error('Lead was created but response was missing data.');
       }
-
-      const response = await fetch(`${API_URL}/leads`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(formData)
+      onLeadAdded(result.lead);
+      setFormData({ 
+        name: '', 
+        email: '', 
+        phone: '', 
+        company: '', 
+        source: 'website', 
+        notes: '' 
       });
-      
-      if (response.ok) {
-        const result = await response.json();
-        onLeadAdded(result.lead);
-        setFormData({ 
-          name: '', 
-          email: '', 
-          phone: '', 
-          company: '', 
-          source: 'website', 
-          notes: '' 
-        });
-      } else {
-        const errorData = await response.json();
-        setError(errorData.message || 'Failed to add lead');
-      }
     } catch (error: unknown) {
       console.error('Failed to add lead:', error);
-      setError(error instanceof Error ? error.message : 'Cannot connect to server. Please make sure the backend is running on port 5000.');
+      setError(
+        error instanceof Error
+          ? error.message
+          : `Cannot connect to server. Please make sure the backend is running at ${API_BASE_URL}.`
+      );
     } finally {
       setLoading(false);
     }
@@ -75,16 +60,16 @@ export default function AddLeadForm({ onLeadAdded }: AddLeadFormProps) {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
-      <h3 className="text-lg font-semibold mb-4">Add New Lead</h3>
+    <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
+      <h3 className="text-lg font-semibold mb-4 text-white">Add New Lead</h3>
       
       {error && (
-        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+        <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 text-red-300 rounded">
           <strong>Error:</strong> {error}
           <div className="text-sm mt-1">
             Make sure your backend server is running. Open terminal and run:
-            <code className="block bg-gray-800 text-white p-2 rounded mt-1">
-              cd backend && npm run dev
+            <code className="block bg-slate-900 text-white p-2 rounded mt-1">
+              cd server && npm run dev
             </code>
           </div>
         </div>
@@ -93,7 +78,7 @@ export default function AddLeadForm({ onLeadAdded }: AddLeadFormProps) {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="name" className="block text-sm font-medium text-slate-300 mb-1">
               Name *
             </label>
             <input
@@ -102,14 +87,14 @@ export default function AddLeadForm({ onLeadAdded }: AddLeadFormProps) {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full border border-slate-600 bg-slate-700 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400"
               required
               disabled={loading}
               placeholder="Enter full name"
             />
           </div>
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-1">
               Email *
             </label>
             <input
@@ -118,14 +103,14 @@ export default function AddLeadForm({ onLeadAdded }: AddLeadFormProps) {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full border border-slate-600 bg-slate-700 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400"
               required
               disabled={loading}
               placeholder="Enter email address"
             />
           </div>
           <div>
-            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="phone" className="block text-sm font-medium text-slate-300 mb-1">
               Phone *
             </label>
             <input
@@ -134,14 +119,14 @@ export default function AddLeadForm({ onLeadAdded }: AddLeadFormProps) {
               name="phone"
               value={formData.phone}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full border border-slate-600 bg-slate-700 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400"
               required
               disabled={loading}
               placeholder="Enter phone number"
             />
           </div>
           <div>
-            <label htmlFor="company" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="company" className="block text-sm font-medium text-slate-300 mb-1">
               Company
             </label>
             <input
@@ -150,13 +135,13 @@ export default function AddLeadForm({ onLeadAdded }: AddLeadFormProps) {
               name="company"
               value={formData.company}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full border border-slate-600 bg-slate-700 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400"
               disabled={loading}
               placeholder="Enter company name"
             />
           </div>
           <div>
-            <label htmlFor="source" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="source" className="block text-sm font-medium text-slate-300 mb-1">
               Source
             </label>
             <select
@@ -164,7 +149,7 @@ export default function AddLeadForm({ onLeadAdded }: AddLeadFormProps) {
               name="source"
               value={formData.source}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full border border-slate-600 bg-slate-700 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               disabled={loading}
             >
               <option value="website">Website</option>
@@ -176,7 +161,7 @@ export default function AddLeadForm({ onLeadAdded }: AddLeadFormProps) {
           </div>
         </div>
         <div>
-          <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="notes" className="block text-sm font-medium text-slate-300 mb-1">
             Notes
           </label>
           <textarea
@@ -185,7 +170,7 @@ export default function AddLeadForm({ onLeadAdded }: AddLeadFormProps) {
             value={formData.notes}
             onChange={handleChange}
             rows={3}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full border border-slate-600 bg-slate-700 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400"
             disabled={loading}
             placeholder="Add any additional notes about this lead..."
           />

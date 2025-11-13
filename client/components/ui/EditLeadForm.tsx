@@ -2,14 +2,13 @@
 
 import { useState } from 'react';
 import { Lead } from '../../types';
+import { apiService } from '../../lib/api';
 
 interface EditLeadFormProps {
   lead: Lead;
   onLeadUpdated: (lead: Lead) => void;
   onCancel: () => void;
 }
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 export default function EditLeadForm({ lead, onLeadUpdated, onCancel }: EditLeadFormProps) {
   const [formData, setFormData] = useState({
@@ -30,26 +29,18 @@ export default function EditLeadForm({ lead, onLeadUpdated, onCancel }: EditLead
     setError('');
     
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/leads/${lead._id}`, {
-        method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(formData)
-      });
-      
-      if (response.ok) {
-        const result = await response.json();
-        onLeadUpdated(result.lead);
-      } else {
-        const errorData = await response.json();
-        setError(errorData.message || 'Failed to update lead');
+      const result = await apiService.updateLead(lead._id, formData);
+      if (!result?.lead) {
+        throw new Error('Lead was updated but response was missing data.');
       }
+      onLeadUpdated(result.lead);
     } catch (error: unknown) {
       console.error('Failed to update lead:', error);
-      setError(error instanceof Error ? error.message : 'Failed to update lead');
+      setError(
+        error instanceof Error
+          ? error.message
+          : 'Failed to update lead. Please try again.'
+      );
     } finally {
       setLoading(false);
     }

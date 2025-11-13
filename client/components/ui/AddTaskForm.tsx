@@ -2,13 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { Task, Lead } from "../../types";
+import { apiService, API_BASE_URL } from "../../lib/api";
 
 interface AddTaskFormProps {
   onTaskAdded: (task: Task) => void;
   leads: Lead[];
 }
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 export default function AddTaskForm({ onTaskAdded, leads }: AddTaskFormProps) {
   const [formData, setFormData] = useState({
@@ -37,16 +36,6 @@ export default function AddTaskForm({ onTaskAdded, leads }: AddTaskFormProps) {
     setError("");
 
     try {
-      const token = localStorage.getItem("token");
-
-      const headers: HeadersInit = {
-        "Content-Type": "application/json",
-      };
-
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
-
       const payload = {
         ...formData,
         dueDate: new Date(formData.dueDate).toISOString(),
@@ -58,37 +47,26 @@ export default function AddTaskForm({ onTaskAdded, leads }: AddTaskFormProps) {
           : undefined,
       };
 
-      const response = await fetch(`${API_URL}/tasks`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(payload),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        onTaskAdded(result.task);
-        setFormData({
-          title: "",
-          description: "",
-          dueDate: new Date(new Date().setDate(new Date().getDate() + 1))
-            .toISOString()
-            .split("T")[0],
-          priority: "medium",
-          relatedTo: "",
-        });
-      } else {
-        const errorData = await response.json();
-        setError(
-          errorData.message ||
-            `Failed to add task: ${response.status} ${response.statusText}`
-        );
+      const result = await apiService.createTask(payload);
+      if (!result?.task) {
+        throw new Error("Task was created but response was missing data.");
       }
+      onTaskAdded(result.task);
+      setFormData({
+        title: "",
+        description: "",
+        dueDate: new Date(new Date().setDate(new Date().getDate() + 1))
+          .toISOString()
+          .split("T")[0],
+        priority: "medium",
+        relatedTo: "",
+      });
     } catch (error: unknown) {
       console.error("Failed to add task:", error);
       setError(
         error instanceof Error
           ? error.message
-          : "Cannot connect to server. Please make sure the backend is running on port 5000."
+          : `Cannot connect to server. Please make sure the backend is running at ${API_BASE_URL}.`
       );
     } finally {
       setLoading(false);
@@ -130,7 +108,7 @@ export default function AddTaskForm({ onTaskAdded, leads }: AddTaskFormProps) {
           <div className="text-sm mt-1">
             Make sure your backend server is running. Open terminal and run:
             <code className="block bg-gray-800 text-white p-2 rounded mt-1">
-              cd backend && npm run dev
+              cd server && npm run dev
             </code>
           </div>
         </div>
