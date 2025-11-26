@@ -3,6 +3,8 @@
 import { useAuth } from '../../../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { Users, Ticket, Clock, AlertTriangle } from 'lucide-react';
+import MetricCard from '../../../components/ui/MetricCard';
 
 interface Ticket {
   _id: string;
@@ -319,66 +321,43 @@ export default function AdminDashboard() {
       {activeTab === 'overview' && (
         <div className="space-y-6">
           {/* Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Total Users Card */}
-            <div className="rounded-2xl border border-slate-700 bg-slate-800 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
-              <div className="flex items-center">
-                <div className="rounded-xl bg-blue-50 p-3 text-blue-600">
-                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                  </svg>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-slate-500">Total users</p>
-                  <p className="text-2xl font-semibold text-white">{userStats?.totalUsers || 0}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Total Tickets Card */}
-            <div className="rounded-2xl border border-slate-700 bg-slate-800 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
-              <div className="flex items-center">
-                <div className="rounded-xl bg-blue-50 p-3 text-blue-600">
-                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-slate-500">Total tickets</p>
-                  <p className="text-2xl font-semibold text-white">{ticketStats?.totalTickets || 0}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Open Tickets Card */}
-            <div className="rounded-2xl border border-slate-700 bg-slate-800 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
-              <div className="flex items-center">
-                <div className="rounded-xl bg-sky-50 p-3 text-sky-600">
-                  <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-slate-500">Open tickets</p>
-                  <p className="text-2xl font-semibold text-white">{ticketStats?.openTickets || 0}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Urgent Tickets Card */}
-            <div className="rounded-2xl border border-slate-700 bg-slate-800 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
-              <div className="flex items-center">
-                <div className="rounded-xl bg-red-50 p-3 text-red-600">
-                  <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-slate-500">Urgent tickets</p>
-                  <p className="text-2xl font-semibold text-white">{ticketStats?.urgentTickets || 0}</p>
-                </div>
-              </div>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <MetricCard
+              icon={Users}
+              label="Total Users"
+              value={userStats?.totalUsers || 0}
+              change="+15%"
+              trend="up"
+              color="blue"
+              size="lg"
+            />
+            <MetricCard
+              icon={Ticket}
+              label="Total Tickets"
+              value={ticketStats?.totalTickets || 0}
+              change="+8%"
+              trend="up"
+              color="purple"
+              size="lg"
+            />
+            <MetricCard
+              icon={Clock}
+              label="Open Tickets"
+              value={ticketStats?.openTickets || 0}
+              change="-12%"
+              trend="down"
+              color="cyan"
+              size="lg"
+            />
+            <MetricCard
+              icon={AlertTriangle}
+              label="Urgent Tickets"
+              value={ticketStats?.urgentTickets || 0}
+              change="+5%"
+              trend="up"
+              color="red"
+              size="lg"
+            />
           </div>
 
           {/* Charts Section */}

@@ -1,14 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Lead } from '../../types';
 import { apiService, API_BASE_URL } from '../../lib/api';
+import Modal from './Modal';
 
-interface AddLeadFormProps {
-  onLeadAdded: (lead: Lead) => void;
+interface LeadModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: (lead: Lead) => void;
+  lead?: Lead | null;
 }
 
-export default function AddLeadForm({ onLeadAdded }: AddLeadFormProps) {
+export default function LeadModal({ isOpen, onClose, onSuccess, lead }: LeadModalProps) {
+  const isEdit = !!lead;
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -20,27 +25,51 @@ export default function AddLeadForm({ onLeadAdded }: AddLeadFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  useEffect(() => {
+    if (lead) {
+      setFormData({
+        name: lead.name || '',
+        email: lead.email || '',
+        phone: lead.phone || '',
+        company: lead.company || '',
+        source: lead.source || 'website',
+        notes: lead.notes || ''
+      });
+    } else {
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        company: '',
+        source: 'website',
+        notes: ''
+      });
+    }
+    setError('');
+  }, [lead, isOpen]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     
     try {
-      const result = await apiService.createLead(formData);
-      if (!result?.lead) {
-        throw new Error('Lead was created but response was missing data.');
+      if (isEdit && lead) {
+        const result = await apiService.updateLead(lead._id, formData);
+        if (!result?.lead) {
+          throw new Error('Lead was updated but response was missing data.');
+        }
+        onSuccess(result.lead);
+      } else {
+        const result = await apiService.createLead(formData);
+        if (!result?.lead) {
+          throw new Error('Lead was created but response was missing data.');
+        }
+        onSuccess(result.lead);
       }
-      onLeadAdded(result.lead);
-      setFormData({ 
-        name: '', 
-        email: '', 
-        phone: '', 
-        company: '', 
-        source: 'website', 
-        notes: '' 
-      });
+      onClose();
     } catch (error: unknown) {
-      console.error('Failed to add lead:', error);
+      console.error(`Failed to ${isEdit ? 'update' : 'create'} lead:`, error);
       setError(
         error instanceof Error
           ? error.message
@@ -60,18 +89,15 @@ export default function AddLeadForm({ onLeadAdded }: AddLeadFormProps) {
   };
 
   return (
-    <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
-      <h3 className="text-lg font-semibold mb-4 text-white">Add New Lead</h3>
-      
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={isEdit ? 'Edit Lead' : 'Add New Lead'}
+      size="md"
+    >
       {error && (
-        <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 text-red-300 rounded">
+        <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 text-red-300 rounded-lg">
           <strong>Error:</strong> {error}
-          <div className="text-sm mt-1">
-            Make sure your backend server is running. Open terminal and run:
-            <code className="block bg-slate-900 text-white p-2 rounded mt-1">
-              cd server && npm run dev
-            </code>
-          </div>
         </div>
       )}
       
@@ -87,7 +113,7 @@ export default function AddLeadForm({ onLeadAdded }: AddLeadFormProps) {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className="w-full border border-slate-600 bg-slate-700 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400"
+              className="w-full border border-slate-600 bg-slate-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400"
               required
               disabled={loading}
               placeholder="Enter full name"
@@ -103,7 +129,7 @@ export default function AddLeadForm({ onLeadAdded }: AddLeadFormProps) {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              className="w-full border border-slate-600 bg-slate-700 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400"
+              className="w-full border border-slate-600 bg-slate-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400"
               required
               disabled={loading}
               placeholder="Enter email address"
@@ -119,7 +145,7 @@ export default function AddLeadForm({ onLeadAdded }: AddLeadFormProps) {
               name="phone"
               value={formData.phone}
               onChange={handleChange}
-              className="w-full border border-slate-600 bg-slate-700 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400"
+              className="w-full border border-slate-600 bg-slate-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400"
               required
               disabled={loading}
               placeholder="Enter phone number"
@@ -135,7 +161,7 @@ export default function AddLeadForm({ onLeadAdded }: AddLeadFormProps) {
               name="company"
               value={formData.company}
               onChange={handleChange}
-              className="w-full border border-slate-600 bg-slate-700 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400"
+              className="w-full border border-slate-600 bg-slate-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400"
               disabled={loading}
               placeholder="Enter company name"
             />
@@ -149,7 +175,7 @@ export default function AddLeadForm({ onLeadAdded }: AddLeadFormProps) {
               name="source"
               value={formData.source}
               onChange={handleChange}
-              className="w-full border border-slate-600 bg-slate-700 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full border border-slate-600 bg-slate-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               disabled={loading}
             >
               <option value="website">Website</option>
@@ -170,16 +196,24 @@ export default function AddLeadForm({ onLeadAdded }: AddLeadFormProps) {
             value={formData.notes}
             onChange={handleChange}
             rows={3}
-            className="w-full border border-slate-600 bg-slate-700 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400"
+            className="w-full border border-slate-600 bg-slate-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400"
             disabled={loading}
             placeholder="Add any additional notes about this lead..."
           />
         </div>
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-3 pt-4 border-t border-slate-700">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={loading}
+            className="px-4 py-2 rounded-lg border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors disabled:opacity-50"
+          >
+            Cancel
+          </button>
           <button 
             type="submit" 
             disabled={loading}
-            className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+            className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? (
               <span className="flex items-center">
@@ -187,14 +221,15 @@ export default function AddLeadForm({ onLeadAdded }: AddLeadFormProps) {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                Adding Lead...
+                {isEdit ? 'Updating...' : 'Adding...'}
               </span>
             ) : (
-              'Add Lead'
+              isEdit ? 'Update Lead' : 'Add Lead'
             )}
           </button>
         </div>
       </form>
-    </div>
+    </Modal>
   );
 }
+

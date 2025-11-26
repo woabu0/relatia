@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { LayoutDashboard, Users, Ticket, LogOut, Menu, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useState } from 'react';
+import Logo from './icons/Logo';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -22,7 +23,7 @@ export default function DashboardSidebar() {
       {/* Mobile menu button */}
       <button
         onClick={() => setIsMobileOpen(!isMobileOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-slate-800 text-white border border-slate-700"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-slate-800 text-white border border-slate-700 shadow-lg"
       >
         {isMobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
       </button>
@@ -34,11 +35,11 @@ export default function DashboardSidebar() {
         } lg:translate-x-0`}
       >
         <div className="flex flex-col h-full">
-          {/* Logo */}
+          {/* Logo Section */}
           <div className="p-6 border-b border-slate-800">
-            <h1 className="text-2xl font-bold text-white">Relatia</h1>
+            <Logo size="sm" />
             {user && (
-              <p className="text-sm text-slate-400 mt-1 capitalize">
+              <p className="text-sm text-slate-400 mt-3 capitalize">
                 {user.role} • {user.username}
               </p>
             )}
@@ -53,9 +54,9 @@ export default function DashboardSidebar() {
                   key={item.name}
                   href={item.href}
                   onClick={() => setIsMobileOpen(false)}
-                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                     isActive
-                      ? 'bg-blue-600 text-white'
+                      ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/30'
                       : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                   }`}
                 >
@@ -89,4 +90,3 @@ export default function DashboardSidebar() {
     </>
   );
 }
-

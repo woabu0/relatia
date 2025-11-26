@@ -1,18 +1,17 @@
 'use client';
 
 import { useAuth } from '../../../contexts/AuthContext';
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Lead } from '../../../types';
-import AddLeadForm from '../../../components/ui/AddLeadForm';
-import EditLeadForm from '../../../components/ui/EditLeadForm';
 import { apiService } from '../../../lib/api';
+import LeadModal from '../../../components/ui/LeadModal';
+import { Plus, Edit2, Trash2, RefreshCw } from 'lucide-react';
 
 export default function LeadsPage() {
   const { user } = useAuth();
-  const router = useRouter();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
 
   useEffect(() => {
@@ -23,6 +22,7 @@ export default function LeadsPage() {
 
   const fetchLeads = async () => {
     try {
+      setLoading(true);
       const data = await apiService.getLeads();
       setLeads(data?.leads ?? []);
     } catch (error) {
@@ -63,6 +63,21 @@ export default function LeadsPage() {
     return `https://wa.me/${formattedPhone}`;
   };
 
+  const openCreateModal = () => {
+    setEditingLead(null);
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (lead: Lead) => {
+    setEditingLead(lead);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditingLead(null);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-64">
@@ -76,37 +91,47 @@ export default function LeadsPage() {
 
   return (
     <div className="space-y-6">
-      {editingLead && (
-        <EditLeadForm
-          lead={editingLead}
-          onLeadUpdated={handleLeadUpdated}
-          onCancel={() => setEditingLead(null)}
-        />
-      )}
-
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-white">Leads Management</h1>
-        <p className="text-sm sm:text-base text-slate-400 mt-2">Manage your customer leads</p>
+      {/* Header with Add Button */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">Leads Management</h1>
+          <p className="text-sm sm:text-base text-slate-400 mt-2">Manage your customer leads</p>
+        </div>
+        {user?.role !== 'admin' && (
+          <button
+            onClick={openCreateModal}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors shadow-lg shadow-blue-500/30"
+          >
+            <Plus className="h-5 w-5" />
+            Add Lead
+          </button>
+        )}
       </div>
 
-      {user?.role !== 'admin' && (
-        <AddLeadForm onLeadAdded={handleLeadAdded} />
-      )}
-      
+      {/* Leads List */}
       <div className="bg-slate-800 rounded-xl shadow-sm border border-slate-700">
         <div className="p-4 border-b border-slate-700 flex justify-between items-center">
           <h3 className="font-semibold text-white">My Leads ({leads.length})</h3>
           <button
             onClick={fetchLeads}
-            className="text-sm bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg transition-colors text-slate-200"
+            className="flex items-center gap-2 text-sm bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg transition-colors text-slate-200"
           >
+            <RefreshCw className="h-4 w-4" />
             Refresh
           </button>
         </div>
         <div className="p-4">
           {leads.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-slate-400">No leads yet. Add your first lead above!</p>
+            <div className="text-center py-12">
+              <p className="text-slate-400 mb-4">No leads yet.</p>
+              {user?.role !== 'admin' && (
+                <button
+                  onClick={openCreateModal}
+                  className="text-blue-400 hover:text-blue-300 font-medium"
+                >
+                  Add your first lead
+                </button>
+              )}
             </div>
           ) : (
             <div className="space-y-3">
@@ -148,16 +173,18 @@ export default function LeadsPage() {
                         {lead.status}
                       </span>
                       <button
-                        onClick={() => setEditingLead(lead)}
-                        className="text-blue-400 hover:text-blue-300 p-1 rounded transition-colors"
+                        onClick={() => openEditModal(lead)}
+                        className="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-lg transition-colors"
+                        aria-label="Edit lead"
                       >
-                        Edit
+                        <Edit2 className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => handleDeleteLead(lead._id)}
-                        className="text-red-400 hover:text-red-300 p-1 rounded transition-colors"
+                        className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+                        aria-label="Delete lead"
                       >
-                        Delete
+                        <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
@@ -167,7 +194,14 @@ export default function LeadsPage() {
           )}
         </div>
       </div>
+
+      {/* Modal */}
+      <LeadModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        onSuccess={editingLead ? handleLeadUpdated : handleLeadAdded}
+        lead={editingLead}
+      />
     </div>
   );
 }
-

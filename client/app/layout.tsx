@@ -20,6 +20,11 @@ export const metadata: Metadata = {
   },
   description:
     "Relatia helps growing teams turn conversations into lasting relationships with modern CRM, task management, and support tooling.",
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({

@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { BarChart3, Users, Ticket, TrendingUp } from 'lucide-react';
+import MetricCard from '../../components/ui/MetricCard';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -31,10 +32,10 @@ export default function DashboardPage() {
   }
 
   const stats = [
-    { label: 'Total Leads', value: '0', icon: Users, color: 'bg-blue-500/20 text-blue-400' },
-    { label: 'Active Tickets', value: '0', icon: Ticket, color: 'bg-purple-500/20 text-purple-400' },
-    { label: 'Conversion Rate', value: '0%', icon: TrendingUp, color: 'bg-green-500/20 text-green-400' },
-    { label: 'Tasks Completed', value: '0', icon: BarChart3, color: 'bg-yellow-500/20 text-yellow-400' },
+    { label: 'Total Leads', value: '0', icon: Users, color: 'blue' as const, change: '+12%', trend: 'up' as const },
+    { label: 'Active Tickets', value: '0', icon: Ticket, color: 'purple' as const, change: '-5%', trend: 'down' as const },
+    { label: 'Conversion Rate', value: '0%', icon: TrendingUp, color: 'green' as const, change: '+24%', trend: 'up' as const },
+    { label: 'Tasks Completed', value: '0', icon: BarChart3, color: 'yellow' as const, change: '+8%', trend: 'up' as const },
   ];
 
   return (
@@ -44,22 +45,18 @@ export default function DashboardPage() {
         <p className="text-sm sm:text-base text-slate-400 mt-2">Welcome back, {user?.username}!</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {stats.map((stat) => (
-          <div
+          <MetricCard
             key={stat.label}
-            className="bg-slate-800 rounded-xl p-6 border border-slate-700 hover:border-slate-600 transition-colors"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-400">{stat.label}</p>
-                <p className="text-2xl font-bold text-white mt-2">{stat.value}</p>
-              </div>
-              <div className={`p-3 rounded-lg ${stat.color}`}>
-                <stat.icon className="h-6 w-6" />
-              </div>
-            </div>
-          </div>
+            icon={stat.icon}
+            label={stat.label}
+            value={stat.value}
+            change={stat.change}
+            trend={stat.trend}
+            color={stat.color}
+            size="lg"
+          />
         ))}
       </div>
 
